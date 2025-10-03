@@ -13,6 +13,10 @@ class Material:
         # By default, materials do not emit light
         return Color(0, 0, 0)
     
+    def scattering_pdf(self, ray_in, hit_record, scattered):
+        # By default, materials do not have a scattering PDF
+        return 0
+    
 class Lambertian(Material):
     def __init__(self, albedo_or_texture):
         # Accepts either a Color or a Texture
@@ -28,6 +32,10 @@ class Lambertian(Material):
         scattered = Ray(hit_record.p, scatter_direction, ray_in.time())
         attenuation = self.tex.value(hit_record.u, hit_record.v, hit_record.p)
         return True, scattered, attenuation
+
+    def scattering_pdf(self, ray_in, hit_record, scattered):
+        cos_theta = Vec3.dot(hit_record.normal, Vec3.unit_vector(scattered.direction()))
+        return 0 if cos_theta < 0 else cos_theta / math.pi
         
 class Metal(Material):
     def __init__(self, albedo, fuzz=0.0):

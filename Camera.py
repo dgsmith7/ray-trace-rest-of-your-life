@@ -54,15 +54,19 @@ class Camera:
     if depth <= 0:
       return Color(0.0, 0.0, 0.0)
     rec = HitRecord()
-    if world.hit(r, Interval(0.001, float('inf')), rec):
-      color_from_emission = rec.mat.emitted(rec.u, rec.v, rec.p)
-      hit, scattered, attenuation = rec.mat.scatter(r, rec)
-      if not hit:
-        return color_from_emission
-      color_from_scatter = attenuation * self.ray_color(scattered, depth - 1, world)
-      return color_from_emission + color_from_scatter
     # If the ray hits nothing, return the background color.
-    return self.background
+    if not world.hit(r, Interval(0.001, float('inf')), rec):
+      return self.background
+    
+    color_from_emission = rec.mat.emitted(rec.u, rec.v, rec.p)
+    hit, scattered, attenuation = rec.mat.scatter(r, rec)
+    if not hit:
+      return color_from_emission
+    
+    scattering_pdf = rec.mat.scattering_pdf(r, rec, scattered)
+    pdf_value = 1 / (2 * math.pi)
+    color_from_scatter = (attenuation * scattering_pdf * self.ray_color(scattered, depth - 1, world)) / pdf_value
+    return color_from_emission + color_from_scatter
 
   def get_ray(self, i, j, s_i=0, s_j=0):
     # Construct a camera ray originating from the defocus disk and directed at a randomly

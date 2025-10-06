@@ -53,6 +53,9 @@ def main():
     box2 = Translate(box2, Vec3(130,0,65))
     world.add(box2)
 
+    # Use BVH for acceleration
+    world = BVHNode(world.objects, 0, len(world.objects))
+
     cam = Camera()
     cam.aspect_ratio = 1.0
     cam.image_width = 600

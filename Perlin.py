@@ -1,9 +1,17 @@
-
 import random
 import math
-import numpy as np
+from typing import Any
 
 class Perlin:
+
+    point_count = 256
+
+    def __init__(self):
+        from Vec3 import Vec3
+        self.randvec = [Vec3.random_unit_vector() for _ in range(self.point_count)]
+        self.perm_x = self.perlin_generate_perm()
+        self.perm_y = self.perlin_generate_perm()
+        self.perm_z = self.perlin_generate_perm()
 
     def turb(self, p, depth=7):
         accum = 0.0
@@ -14,14 +22,6 @@ class Perlin:
             weight *= 0.5
             temp_p = temp_p * 2
         return abs(accum)
-    point_count = 256
-
-    def __init__(self):
-        from Vec3 import Vec3
-        self.randvec = [Vec3.random_unit_vector() for _ in range(self.point_count)]
-        self.perm_x = self.perlin_generate_perm()
-        self.perm_y = self.perlin_generate_perm()
-        self.perm_z = self.perlin_generate_perm()
 
     def noise(self, p):
         # p is expected to be a Vec3 or similar with x(), y(), z() methods
@@ -35,7 +35,7 @@ class Perlin:
         i = int(math.floor(p.x()))
         j = int(math.floor(p.y()))
         k = int(math.floor(p.z()))
-        c = [[[None for _ in range(2)] for _ in range(2)] for _ in range(2)]
+        c: list[list[list[Any]]] = [[[None for _ in range(2)] for _ in range(2)] for _ in range(2)]
         for di in range(2):
             for dj in range(2):
                 for dk in range(2):

@@ -3,13 +3,15 @@ from abc import ABC, abstractmethod
 from Vec3 import Point3, Vec3
 from Ray import Ray
 from Interval import Interval
+from typing import Optional
 from Material import Material
+from Aabb import Aabb
 
 class HitRecord:
     def __init__(self):
         self.p = Point3()         # Hit point
         self.normal = Vec3()      # Surface normal at hit
-        self.mat = None           # Material at hit
+        self.mat: Optional[Material] = None  # Material at hit
         self.t = 0.0              # Ray parameter at hit
         self.u = 0.0              # U texture coordinate
         self.v = 0.0              # V texture coordinate
@@ -29,8 +31,8 @@ class Hittable(ABC):
         pass
 
     @abstractmethod
-    def bounding_box(self):
-        pass
+    def bounding_box(self) -> Optional[Aabb]:
+        return None
 
 # Translate wrapper for hittable objects
 class Translate(Hittable):

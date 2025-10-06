@@ -3,9 +3,9 @@ from Vec3 import Vec3, Color
 from Texture import Texture, SolidColor
 import math
 import random
-
+from typing import Optional, Tuple
 class Material:
-    def scatter(self, ray_in, hit_record):
+    def scatter(self, ray_in, hit_record) -> Tuple[bool, Optional[Ray], Optional[Color]]:
         # By default, materials do not scatter
         return False, None, None
 
@@ -15,27 +15,25 @@ class Material:
     
     def scattering_pdf(self, ray_in, hit_record, scattered):
         # By default, materials do not have a scattering PDF
-        return 0
+        return 0.0
     
 class Lambertian(Material):
     def __init__(self, albedo_or_texture):
-        # Accepts either a Color or a Texture
         if isinstance(albedo_or_texture, Texture):
             self.tex = albedo_or_texture
         else:
             self.tex = SolidColor(albedo_or_texture)
 
-    def scatter(self, ray_in, hit_record):
-        scatter_direction = hit_record.normal + Vec3.random_unit_vector()
+    def scatter(self, ray_in, hit_record) -> Tuple[bool, Optional[Ray], Optional[Color]]:
+        scatter_direction = Vec3.random_on_hemisphere(hit_record.normal)
         if scatter_direction.near_zero():
             scatter_direction = hit_record.normal
         scattered = Ray(hit_record.p, scatter_direction, ray_in.time())
         attenuation = self.tex.value(hit_record.u, hit_record.v, hit_record.p)
         return True, scattered, attenuation
 
-    def scattering_pdf(self, ray_in, hit_record, scattered):
-        cos_theta = Vec3.dot(hit_record.normal, Vec3.unit_vector(scattered.direction()))
-        return 0 if cos_theta < 0 else cos_theta / math.pi
+    def scattering_pdf(self, ray_in, hit_record, scattered) -> float:
+        return 1.0 / (2.0 * math.pi)
         
 class Metal(Material):
     def __init__(self, albedo, fuzz=0.0):
@@ -90,18 +88,6 @@ class DiffuseLight(Material):
 
     def emitted(self, u, v, p):
         return self.tex.value(u, v, p)
-    
-class DiffuseLight(Material):
-    def __init__(self, tex_or_color):
-        # Accepts either a Texture or a Color
-        if isinstance(tex_or_color, Texture):
-            self.tex = tex_or_color
-        else:
-            self.tex = SolidColor(tex_or_color)
-
-    def emitted(self, u, v, p):
-        return self.tex.value(u, v, p)
-
 class Isotropic(Material):
     def __init__(self, tex_or_color):
         if isinstance(tex_or_color, Texture):

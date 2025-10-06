@@ -1,5 +1,11 @@
 # Helper function to create a box from two points and a material
 from HittableList import HittableList
+from Hittable import Hittable
+from Vec3 import Vec3
+from Material import Material
+from Aabb import Aabb
+from Interval import Interval
+
 def box(a, b, mat):
     # Returns a HittableList of six quads forming a box from two opposite corners
     min_pt = type(a)(min(a.x(), b.x()), min(a.y(), b.y()), min(a.z(), b.z()))
@@ -21,23 +27,22 @@ def box(a, b, mat):
     # bottom
     sides.add(Quad(type(a)(min_pt.x(), min_pt.y(), min_pt.z()), dx, dz, mat))
     return sides
-from Hittable import Hittable
-from Vec3 import Vec3
-from Material import Material
-from Aabb import Aabb
-from Interval import Interval
 
 class Quad(Hittable):
     def __init__(self, Q, u, v, mat):
-        self.Q = Q              # Vec3: corner point
-        self.u = u              # Vec3: edge vector
-        self.v = v              # Vec3: edge vector
-        self.mat = mat          # Material
-        # Compute normal, D, and w as in C++ pseudocode
-        n = self.u.cross(self.v)
+        self.Q = Q
+        self.u = u
+        self.v = v
+        self.mat = mat
+        # Use static method for cross product
+        n = Vec3.cross(self.u, self.v)
         self.normal = n.unit()
-        self.D = self.normal.dot(self.Q)
-        self.w = n / n.dot(n)   # Vec3: w = n / dot(n, n)
+        self.D = Vec3.dot(self.normal, self.Q)
+        n_dot_n = Vec3.dot(n, n)
+        if n_dot_n != 0:
+            self.w = n / n_dot_n
+        else:
+            self.w = Vec3(0, 0, 0)  # fallback for degenerate quad
         self.set_bounding_box()
 
     def set_bounding_box(self):
@@ -49,24 +54,19 @@ class Quad(Hittable):
     def bounding_box(self):
         return self.bbox
 
-    # ...existing code...
-
-    # Additional attributes for C++ parity:
-    # self.normal: Vec3, unit normal to the quad
-    # self.D: float, plane constant
-
     def hit(self, r, ray_t, rec):
         # Ray-plane intersection
-        denom = self.normal.dot(r.direction())
+        denom = Vec3.dot(self.normal, r.direction())
         if abs(denom) < 1e-8:
             return False  # Ray is parallel to the plane
-        t = (self.D - self.normal.dot(r.origin())) / denom
+        t = (self.D - Vec3.dot(self.normal, r.origin())) / denom
         if not ray_t.contains(t):
             return False
         intersection = r.at(t)
         planar_hitpt_vector = intersection - self.Q
-        alpha = self.w.dot(planar_hitpt_vector.cross(self.v))
-        beta = self.w.dot(self.u.cross(planar_hitpt_vector))
+        # Use static method for cross product
+        alpha = Vec3.dot(self.w, Vec3.cross(planar_hitpt_vector, self.v))
+        beta = Vec3.dot(self.w, Vec3.cross(self.u, planar_hitpt_vector))
         if not self.is_interior(alpha, beta, rec):
             return False
         rec.t = t

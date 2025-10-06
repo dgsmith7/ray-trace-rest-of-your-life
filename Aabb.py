@@ -1,8 +1,11 @@
 from Interval import Interval
 from Vec3 import Point3, Vec3
 from Ray import Ray
+from typing import ClassVar
 
 class Aabb:
+    empty: ClassVar["Aabb"]
+    universe: ClassVar["Aabb"]
 
     def __add__(self, offset):
         # Allow Aabb + Vec3
@@ -19,16 +22,16 @@ class Aabb:
         # Allow Vec3 + Aabb
         return self.__add__(offset)
     
-    def longest_axis(self):
-        x_size = self.x.size()
-        y_size = self.y.size()
-        z_size = self.z.size()
-        if x_size > y_size and x_size > z_size:
-            return 0
-        elif y_size > z_size:
-            return 1
-        else:
-            return 2
+    # def longest_axis(self):
+    #     x_size = self.x.size()
+    #     y_size = self.y.size()
+    #     z_size = self.z.size()
+    #     if x_size > y_size and x_size > z_size:
+    #         return 0
+    #     elif y_size > z_size:
+    #         return 1
+    #     else:
+    #         return 2
         
     @staticmethod
     def surrounding_box(box0, box1):
@@ -115,6 +118,7 @@ class Aabb:
             return 0 if x_size > z_size else 2
         else:
             return 1 if y_size > z_size else 2
+        
 
 # Static empty and universe boxes
 Aabb.empty = Aabb(x=Interval.empty, y=Interval.empty, z=Interval.empty)

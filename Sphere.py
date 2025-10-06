@@ -3,8 +3,8 @@ from Hittable import Hittable, HitRecord
 from Vec3 import Point3, Vec3
 from Ray import Ray
 from Interval import Interval
-
-from Material import Material#
+from typing import Optional
+from Material import Material
 from Aabb import Aabb
 
 
@@ -18,7 +18,7 @@ class Sphere(Hittable):
         v = theta / math.pi
         return u, v
     
-    def __init__(self, center1: Point3, radius: float, mat: Material, center2: Point3 = None):
+    def __init__(self, center1: Point3, radius: float, mat: Material, center2: Optional[Point3] = None):
         # If center2 is None, stationary sphere. Otherwise, moving sphere.
         self.center1 = center1
         if center2 is not None:

@@ -50,7 +50,7 @@ class Camera:
         self.defocus_disk_u = self.u * self.defocus_radius
         self.defocus_disk_v = self.v * self.defocus_radius
 
-    def render(self, file, world):
+    def render(self, file, world, lights):
         start = datetime.datetime.now()
         self.initialize()
         file.write("P3\n")
@@ -71,10 +71,11 @@ class Camera:
                 for s_j in range(self.sqrt_spp):
                     for s_i in range(self.sqrt_spp):
                         r = self.get_ray(i, j, s_i, s_j)
-                        pixel_color += self.ray_color(r, self.max_depth, world)
+                        pixel_color += self.ray_color(r, self.max_depth, world, lights)
                 write_color(file, self.pixel_samples_scale * pixel_color)
+        print("Done.")
 
-    def ray_color(self, r, depth, world):
+    def ray_color(self, r, depth, world, lights):
         # If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0:
             return Color(0.0, 0.0, 0.0)
@@ -94,12 +95,16 @@ class Camera:
             return color_from_emission
         _, scattered, attenuation, _ = scatter_result
 
-        # Use cosine-weighted PDF for surface scattering
-        surface_pdf = CosinePdf(rec.normal)
-        scattered = Ray(rec.p, surface_pdf.generate(), r.time())
-        pdf_value = surface_pdf.value(scattered.direction())
+        # Mixture PDF: combine light and cosine PDFs
+        from Pdf import HittablePdf, CosinePdf, MixturePdf
+        p0 = HittablePdf(lights, rec.p)
+        p1 = CosinePdf(rec.normal)
+        mixed_pdf = MixturePdf(p0, p1)
+        scattered = Ray(rec.p, mixed_pdf.generate(), r.time())
+        pdf_value = mixed_pdf.value(scattered.direction())
         scattering_pdf = rec.mat.scattering_pdf(r, rec, scattered)
-        color_from_scatter = (attenuation * scattering_pdf * self.ray_color(scattered, depth - 1, world)) / pdf_value
+        sample_color = self.ray_color(scattered, depth - 1, world, lights)
+        color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value
 
         return color_from_emission + color_from_scatter
 

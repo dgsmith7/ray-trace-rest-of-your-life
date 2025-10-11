@@ -34,6 +34,14 @@ class Hittable(ABC):
     def bounding_box(self) -> Optional[Aabb]:
         return None
 
+    def pdf_value(self, origin: Point3, direction: Vec3) -> float:
+        # Default implementation returns 0.0
+        return 0.0
+
+    def random(self, origin: Point3) -> Vec3:
+        # Default implementation returns Vec3(1,0,0)
+        return Vec3(1, 0, 0)
+
 # Translate wrapper for hittable objects
 class Translate(Hittable):
     def __init__(self, obj, offset):

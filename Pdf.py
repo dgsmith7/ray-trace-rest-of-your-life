@@ -1,6 +1,8 @@
-from Vec3 import Vec3
+from Vec3 import Vec3, Point3
 import math
 from Onb import Onb
+from Hittable import Hittable
+import random
 
 class Pdf:
     def value(self, direction: Vec3) -> float:
@@ -29,3 +31,27 @@ class CosinePdf(Pdf):
 
     def generate(self) -> Vec3:
         return self.uvw.transform(Vec3.random_cosine_direction())
+    
+class HittablePdf(Pdf):
+    def __init__(self, objects: Hittable, origin: Point3):
+        self.objects = objects
+        self.origin = origin
+
+    def value(self, direction: Vec3) -> float:
+        return self.objects.pdf_value(self.origin, direction)
+
+    def generate(self) -> Vec3:
+        return self.objects.random(self.origin)
+    
+class MixturePdf(Pdf):
+    def __init__(self, p0: Pdf, p1: Pdf):
+        self.p = [p0, p1]
+
+    def value(self, direction: Vec3) -> float:
+        return 0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
+
+    def generate(self) -> Vec3:
+        if random.random() < 0.5:
+            return self.p[0].generate()
+        else:
+            return self.p[1].generate()

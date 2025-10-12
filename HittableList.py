@@ -1,4 +1,4 @@
-
+from Vec3 import Vec3
 from Hittable import Hittable, HitRecord
 from Ray import Ray
 from Interval import Interval
@@ -42,3 +42,19 @@ class HittableList(Hittable):
                 rec.u = temp_rec.u
                 rec.v = temp_rec.v
         return hit_anything
+    
+    def pdf_value(self, origin, direction):
+        if not self.objects:
+            return 0.0
+        weight = 1.0 / len(self.objects)
+        total = 0.0
+        for obj in self.objects:
+            total += weight * obj.pdf_value(origin, direction)
+        return total
+
+    def random(self, origin):
+        if not self.objects:
+            return Vec3(1, 0, 0)
+        import random
+        idx = random.randint(0, len(self.objects) - 1)
+        return self.objects[idx].random(origin)

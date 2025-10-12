@@ -6,7 +6,8 @@ from Interval import Interval
 from typing import Optional
 from Material import Material
 from Aabb import Aabb
-
+from Onb import Onb
+import random
 
 class Sphere(Hittable):
     @staticmethod
@@ -73,3 +74,37 @@ class Sphere(Hittable):
         rec.mat = self.mat
 
         return True
+    
+    def pdf_value(self, origin: Point3, direction: Vec3) -> float:
+        # Only works for stationary spheres (center at t=0)
+        from Ray import Ray
+        from Interval import Interval
+        rec = HitRecord()
+        ray = Ray(origin, direction)
+        if not self.hit(ray, Interval(0.001, float('inf')), rec):
+            return 0.0
+        dist_squared = (self.center(0.0) - origin).length_squared()
+        if dist_squared == 0 or self.radius * self.radius > dist_squared:
+            return 0.0
+        cos_theta_max = math.sqrt(1 - self.radius * self.radius / dist_squared)
+        solid_angle = 2 * math.pi * (1 - cos_theta_max)
+        return 1.0 / solid_angle if solid_angle > 0 else 0.0
+
+    def random(self, origin: Point3) -> Vec3:
+        direction = self.center(0.0) - origin
+        distance_squared = direction.length_squared()
+        uvw = Onb(direction)
+        return uvw.transform(self.random_to_sphere(self.radius, distance_squared))
+
+    @staticmethod
+    def random_to_sphere(radius: float, distance_squared: float) -> Vec3:
+        r1 = random.random()
+        r2 = random.random()
+        if distance_squared == 0 or radius * radius > distance_squared:
+            z = 1.0
+        else:
+            z = 1 + r2 * (math.sqrt(1 - radius * radius / distance_squared) - 1)
+        phi = 2 * math.pi * r1
+        x = math.cos(phi) * math.sqrt(1 - z * z)
+        y = math.sin(phi) * math.sqrt(1 - z * z)
+        return Vec3(x, y, z)

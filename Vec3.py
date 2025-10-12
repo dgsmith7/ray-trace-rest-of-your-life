@@ -49,6 +49,8 @@ class Vec3:
         return self.__mul__(t)
 
     def __truediv__(self, t):
+        if t == 0:
+            return Vec3(0, 0, 0)
         return Vec3(*(self.e / t))
 
     def length(self):

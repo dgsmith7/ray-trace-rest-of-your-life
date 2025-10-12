@@ -1,7 +1,6 @@
 from Vec3 import Vec3, Point3
 import math
 from Onb import Onb
-from Hittable import Hittable
 import random
 
 class Pdf:
@@ -10,7 +9,7 @@ class Pdf:
 
     def generate(self) -> Vec3:
         raise NotImplementedError("Pdf.generate() must be implemented by subclasses.")
-    
+
 class SpherePdf(Pdf):
     def __init__(self):
         pass
@@ -20,7 +19,7 @@ class SpherePdf(Pdf):
 
     def generate(self) -> Vec3:
         return Vec3.random_unit_vector()
-    
+
 class CosinePdf(Pdf):
     def __init__(self, w: Vec3):
         self.uvw = Onb(w)
@@ -31,9 +30,11 @@ class CosinePdf(Pdf):
 
     def generate(self) -> Vec3:
         return self.uvw.transform(Vec3.random_cosine_direction())
-    
+
 class HittablePdf(Pdf):
-    def __init__(self, objects: Hittable, origin: Point3):
+    def __init__(self, objects, origin: Point3):
+        # Import Hittable here to avoid circular import
+        # from Hittable import Hittable
         self.objects = objects
         self.origin = origin
 
@@ -42,7 +43,7 @@ class HittablePdf(Pdf):
 
     def generate(self) -> Vec3:
         return self.objects.random(self.origin)
-    
+
 class MixturePdf(Pdf):
     def __init__(self, p0: Pdf, p1: Pdf):
         self.p = [p0, p1]

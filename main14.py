@@ -90,11 +90,18 @@ def main():
     cluster = Translate(cluster, Vec3(-100, 270, 395))
     world.add(cluster)
 
+   # Light Sources
+    #empty_material = EmptyMaterial()
+    lights = HittableList()
+    #lights.add(Quad(Point3(343,554,332), Vec3(-130,0,0), Vec3(0,0,-105), empty_material))
+    #lights.add(Sphere(Point3(190, 90, 190), 90, empty_material))
+
+
     cam = Camera()
     cam.aspect_ratio = 1.0
-    cam.image_width = 400#800
-    cam.samples_per_pixel = 250#10000
-    cam.max_depth = 4#40
+    cam.image_width = 800
+    cam.samples_per_pixel = 1000
+    cam.max_depth = 40
     cam.background = Vec3(0, 0, 0)
     cam.vfov = 40
     cam.lookfrom = Point3(278, 278, -600)
@@ -105,7 +112,8 @@ def main():
     starttime = datetime.datetime.now()
     print("Started rendering at: ", starttime)
     f = open_new_image_file()
-    cam.render(f, world)
+    # cam.render(f, world)
+    cam.render(f, world, lights)
     f.close()
     endtime = datetime.datetime.now()
     print("Finished rendering at: ", endtime)

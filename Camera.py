@@ -3,7 +3,7 @@ from Vec3 import Color, Vec3, Point3
 from Interval import Interval
 from Ray import Ray
 from color import write_color
-from Pdf import CosinePdf
+from Pdf import CosinePdf, MixturePdf
 import math
 import random
 import datetime
@@ -87,24 +87,26 @@ class Camera:
         if rec.mat is None:
             return Color(0.0, 0.0, 0.0)
 
+        from Pdf import HittablePdf, MixturePdf
+        from Material import ScatterRecord
+
+        srec = ScatterRecord()
         color_from_emission = rec.mat.emitted(r, rec, rec.u, rec.v, rec.p)
 
-        # Scatter: attenuation, scattered ray, pdf_value
-        scatter_result = rec.mat.scatter(r, rec)
-        if not scatter_result[0]:
+        if not rec.mat.scatter(r, rec, srec):
             return color_from_emission
-        _, scattered, attenuation, _ = scatter_result
 
-        # Mixture PDF: combine light and cosine PDFs
-        from Pdf import HittablePdf, CosinePdf, MixturePdf
-        p0 = HittablePdf(lights, rec.p)
-        p1 = CosinePdf(rec.normal)
-        mixed_pdf = MixturePdf(p0, p1)
-        scattered = Ray(rec.p, mixed_pdf.generate(), r.time())
-        pdf_value = mixed_pdf.value(scattered.direction())
+        if srec.skip_pdf:
+            return srec.attenuation * self.ray_color(srec.skip_pdf_ray, depth - 1, world, lights)
+
+        light_ptr = HittablePdf(lights, rec.p)
+        pdf_ptr = srec.pdf_ptr if srec.pdf_ptr is not None else CosinePdf(rec.normal)
+        p = MixturePdf(light_ptr, pdf_ptr)
+        scattered = Ray(rec.p, p.generate(), r.time())
+        pdf_value = p.value(scattered.direction())
         scattering_pdf = rec.mat.scattering_pdf(r, rec, scattered)
         sample_color = self.ray_color(scattered, depth - 1, world, lights)
-        color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value
+        color_from_scatter = (srec.attenuation * scattering_pdf * sample_color) / pdf_value
 
         return color_from_emission + color_from_scatter
 

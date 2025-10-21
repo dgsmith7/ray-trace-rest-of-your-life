@@ -7,6 +7,8 @@ from Pdf import CosinePdf, MixturePdf
 import math
 import random
 import datetime
+from Pdf import HittablePdf, MixturePdf
+from Material import ScatterRecord
 
 class Camera:
     def __init__(self):
@@ -86,9 +88,6 @@ class Camera:
 
         if rec.mat is None:
             return Color(0.0, 0.0, 0.0)
-
-        from Pdf import HittablePdf, MixturePdf
-        from Material import ScatterRecord
 
         srec = ScatterRecord()
         color_from_emission = rec.mat.emitted(r, rec, rec.u, rec.v, rec.p)

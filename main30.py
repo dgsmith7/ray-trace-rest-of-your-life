@@ -63,7 +63,7 @@ def main():
     cam = Camera()
     cam.aspect_ratio = 1.0
     cam.image_width = 600
-    cam.samples_per_pixel = 100
+    cam.samples_per_pixel = 1000
     cam.max_depth = 50
     cam.background = Vec3(0, 0, 0)
     cam.vfov = 40
